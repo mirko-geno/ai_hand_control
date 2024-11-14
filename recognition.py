@@ -4,62 +4,62 @@ import mediapipe as mp
 
 class Hand:
     def __init__(self):
-        self.mp_hands = mp.solutions.hands
+        self.__mp_hands = mp.solutions.hands
 
         # Webcam input
-        self.cap = cv2.VideoCapture(0)
+        self.__cap = cv2.VideoCapture(0)
         # Webcam output
-        self.image = None
+        self.__image = None
+
+        self.results = None
     
 
-    def print_image(self, results):
+    def __print_image(self):
         mp_drawing = mp.solutions.drawing_utils
         mp_drawing_styles = mp.solutions.drawing_styles
 
         # To draw the hand annotations on the image.
-        self.image.flags.writeable = True
-        self.image = cv2.cvtColor(self.image, cv2.COLOR_RGB2BGR)
-        if results.multi_hand_landmarks:
-            results.multi_hand_landmarks[0]
-
-            for hand_landmarks in results.multi_hand_landmarks:
+        self.__image.flags.writeable = True
+        self.__image = cv2.cvtColor(self.__image, cv2.COLOR_RGB2BGR)
+        if self.results.multi_hand_landmarks:
+            for hand_landmarks in self.results.multi_hand_landmarks:
                     mp_drawing.draw_landmarks(
-                        self.image,
+                        self.__image,
                         hand_landmarks,
-                        self.mp_hands.HAND_CONNECTIONS,
+                        self.__mp_hands.HAND_CONNECTIONS,
                         mp_drawing_styles.get_default_hand_landmarks_style(),
                         mp_drawing_styles.get_default_hand_connections_style())
         # Flip the image horizontally for a selfie-view display.
-        cv2.imshow('MediaPipe Hands', cv2.flip(self.image, 1))
+        cv2.imshow('MediaPipe Hands', cv2.flip(self.__image, 1))
 
 
     def get_landmarks(self, hands):
         # To improve performance, optionally mark the image as not writeable to
         # pass by reference.
-        self.image.flags.writeable = False
-        self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
-        results = hands.process(self.image)
+        self.__image.flags.writeable = False
+        self.__image = cv2.cvtColor(self.__image, cv2.COLOR_BGR2RGB)
+        results = hands.process(self.__image)
         return results
 
 
     def setup(self):
-        with self.mp_hands.Hands(
+        with self.__mp_hands.Hands(
             max_num_hands=1,
             model_complexity=0,
             min_detection_confidence=0.7,
             min_tracking_confidence=0.7
             ) as hands:
             
-            while self.cap.isOpened():
-                _, self.image = self.cap.read()
+            while self.__cap.isOpened():
+                _, self.__image = self.__cap.read()
                 
-                results = self.get_landmarks(hands)
+                self.results = self.get_landmarks(hands)
 
-                self.print_image(results)
+                self.__print_image()
                
                 if cv2.waitKey(5) & 0xFF == 27:
                     break
-        self.cap.release()
+        self.__cap.release()
 
 
 if __name__ == '__main__':
