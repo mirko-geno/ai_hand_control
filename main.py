@@ -48,11 +48,13 @@ def main():
 
         finger_states = get_finger_states(last_record, handedness)
         finger_states = list(map(to_array, finger_states.values()))
-        finger_states_str = ",".join(map(str, finger_states))
-        
-        message = finger_states_str.encode(encoding='ascii', errors='strict')
-        ser.write(message)
-        print(f"Sent to Arduino: {message}")
+
+        # Convert list of finger states to a single 5-bit byte (integer)
+        message = sum((state << i) for i, state in enumerate(finger_states))
+
+        # Send the byte as a single byte to Arduino
+        ser.write(bytes([message]))
+        print(f"Sent to Arduino: {message:05b}")  # Print the message in binary format for clarity
         sleep(1)
 
     ser.close()
