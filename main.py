@@ -46,15 +46,23 @@ def main():
         except Exception as e:
             print(f"Error accessing landmarks: {e}")
 
+        # Get finger states and convert to binary (5 bits)
         finger_states = get_finger_states(last_record, handedness)
         finger_states = list(map(to_array, finger_states.values()))
 
-        # Convert list of finger states to a single 5-bit byte (integer)
-        message = sum((state << i) for i, state in enumerate(finger_states))
+        # Create a 5-bit integer by shifting each bit into place
+        finger_byte = 0
+        for i, state in enumerate(finger_states):
+            finger_byte |= (state << i)  # Set the i-th bit to the finger state (0 or 1)
 
-        # Send the byte as a single byte to Arduino
-        ser.write(bytes([message]))
-        print(f"Sent to Arduino: {message:05b}")  # Print the message in binary format for clarity
+        # Make sure to send the byte with 3 additional zeros as the higher bits
+        # finger_byte is a 5-bit number, we need to shift it to fit into a full byte (8 bits)
+        finger_byte = finger_byte & 0x1F  # Mask to ensure only the lower 5 bits are used (0x1F = 31)
+
+        # Send the byte over the serial connection
+        ser.write(bytes([finger_byte]))
+        print(f"Sent to Arduino: {finger_byte:08b}")  # Print the byte in binary for confirmation
+        
         sleep(1)
 
     ser.close()
