@@ -27,7 +27,7 @@ def get_finger_states(last_record, handedness):
 
 def main():
     print("Starting program...")
-    ser = Serial(port="COM6", baudrate=9600)
+    ser = Serial(port="/dev/ttyUSB0", baudrate=9600)
     hand = Hand()
     recognizer = Thread(target=hand.setup)
     recognizer.start()
@@ -50,8 +50,9 @@ def main():
         finger_states = list(map(to_array, finger_states.values()))
         finger_states_str = ",".join(map(str, finger_states))
         
-        ser.write(finger_states_str.encode("utf-8") + b'\n')
-        print(f"Sent to Arduino: {finger_states_str}")
+        message = finger_states_str.encode(encoding='ascii', errors='strict')
+        ser.write(message)
+        print(f"Sent to Arduino: {message}")
         sleep(1)
 
     ser.close()
