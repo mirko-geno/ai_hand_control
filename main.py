@@ -4,7 +4,7 @@ from threading import Thread
 from time import sleep
 from serial import Serial
 
-STARTUP_TIME = 7
+STARTUP_TIME = 3
 
 
 def to_array(value):
@@ -27,7 +27,7 @@ def get_finger_states(last_record, handedness):
 
 def main():
     print("Starting program...")
-    ser = Serial(port="/dev/ttyUSB0", baudrate=9600)
+    ser = Serial(port="COM6", baudrate=9600)
     hand = Hand()
     recognizer = Thread(target=hand.setup)
     recognizer.start()
@@ -59,10 +59,16 @@ def main():
         # finger_byte is a 5-bit number, we need to shift it to fit into a full byte (8 bits)
         finger_byte = finger_byte & 0x1F  # Mask to ensure only the lower 5 bits are used (0x1F = 31)
 
-        # Send the byte over the serial connection
-        ser.write(bytes([finger_byte]))
-        print(f"Sent to Arduino: {finger_byte:08b}")  # Print the byte in binary for confirmation
-        
+        # Send the byte over the serial 
+        try:
+            ser.write(bytes([finger_byte]))
+            # print(f"Sent to Arduino: {finger_byte:08b}")  # Print the byte in binary for confirmation
+    
+
+        except Exception as e:
+            ser.close()
+            print(f"Got error {e} when trying to send data")
+            ser = Serial(port="COM6", baudrate=9600)
         sleep(1)
 
     ser.close()
